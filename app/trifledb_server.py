@@ -1,8 +1,8 @@
 import asyncio
+import argparse
 from trifledb import TrifleDB
 
 trifledb = TrifleDB()
-loop = asyncio.get_event_loop()
 
 async def process(message):
     args = message.split()
@@ -28,11 +28,15 @@ async def serve(reader, writer):
     await writer.drain()
     writer.close()
 
-async def main():
+async def main(host, port):
     server = await asyncio.start_server(
-        serve, '127.0.0.1', 6789)
+        serve, host, port)
 
     async with server:
         await server.serve_forever()
 
-asyncio.run(main())
+parser = argparse.ArgumentParser(description='trifledb asyncio server')
+parser.add_argument('-i', '--host', help='host name or ip address where the server will run', default='127.0.0.1')
+parser.add_argument('-p', '--port', help='port on which the server will listen', default=6789)
+args = parser.parse_args()
+asyncio.run(main(args.host, args.port))

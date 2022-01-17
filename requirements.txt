@@ -1,0 +1,8 @@
+gunicorn
+uvicorn[standard]
+fastapi
+fastapi-versioning
+pydantic
+typing
+requests
+pytest

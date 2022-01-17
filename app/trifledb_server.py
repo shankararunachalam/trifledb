@@ -1,25 +1,38 @@
-from fastapi import FastAPI, Request
-from fastapi_versioning import VersionedFastAPI, version
-from app.trifledb import TrifleDB
+import asyncio
+from trifledb import TrifleDB
 
-app = FastAPI(title="TrifleDB key-value store")
 trifledb = TrifleDB()
+loop = asyncio.get_event_loop()
 
-@app.get("/{key}")
-@version(1)
-def get(key: str):
-    value = trifledb[key]
-    if not value:
-        return "key not found"
-    return value
+async def process(message):
+    args = message.split()
+    arg_count = len(args)
+    response = 'bad request'
+    if arg_count in (2, 3):
+        command = args[0]
+        key = args[1]
+        if command == 'get':
+            response = trifledb[key]
+            if not response:
+                response = 'key not found'
+        elif command == 'put' and arg_count == 3:
+            value = args[2]
+            trifledb[key] = value
+            response = 'done'
+    return response
 
-@app.post("/{key}", status_code=200)
-@version(1)
-async def put(key: str, request: Request):
-    trifledb[key] = await request.body()
-    return True
-    
-app = VersionedFastAPI(app,
-    version_format='{major}',
-    prefix_format='/v{major}',
-    enable_latest=True)
+async def serve(reader, writer):
+    data = await reader.read(100)
+    response = await process(data.decode())
+    writer.write(response.encode())
+    await writer.drain()
+    writer.close()
+
+async def main():
+    server = await asyncio.start_server(
+        serve, '127.0.0.1', 6789)
+
+    async with server:
+        await server.serve_forever()
+
+asyncio.run(main())

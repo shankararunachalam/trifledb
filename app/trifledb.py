@@ -23,6 +23,6 @@ class TrifleDB:
 
     def delete(self, key):
         if key in self.db:
-    	    del self.db[key]
-    	    return True
+            del self.db[key]
+            return True
         return False

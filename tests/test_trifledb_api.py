@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from app.trifledb_server import app
+from app.trifledb_api import app
 
 client = TestClient(app)
 
